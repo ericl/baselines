@@ -9,6 +9,7 @@ from ray.rllib.optimizers.sample_batch import SampleBatch, pack
 
 import tensorflow as tf
 import models
+from baselines.common.schedules import LinearSchedule
 from simple import ActWrapper
 from build_graph import build_train
 from utils import BatchInput
@@ -62,7 +63,7 @@ class DQNEvaluator(Evaluator):
 
         # Create the schedule for exploration starting from 1.
         self.exploration = LinearSchedule(
-            schedule_timesteps=int(self.config["exploration_fraction"] * self.config["exploration_max_timesteps"]),
+            schedule_timesteps=int(self.config["exploration_fraction"] * self.config["schedule_max_timesteps"]),
             initial_p=1.0,
             final_p=self.config["exploration_final_eps"])
 
