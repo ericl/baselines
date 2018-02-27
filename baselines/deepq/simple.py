@@ -25,7 +25,7 @@ class ActWrapper(object):
         with open(path, "rb") as f:
             model_data, act_params = cloudpickle.load(f)
         act = deepq.build_act(**act_params)
-        sess = tf.Session()
+        sess = U.make_session()
         sess.__enter__()
         with tempfile.TemporaryDirectory() as td:
             arc_path = os.path.join(td, "packed.zip")
@@ -165,7 +165,7 @@ def learn(env,
     """
     # Create all the functions necessary to train the model
 
-    sess = tf.Session()
+    sess = U.make_session()
     sess.__enter__()
 
     # capture the shape outside the closure so that the env object is not serialized
