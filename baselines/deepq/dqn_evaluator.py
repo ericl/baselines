@@ -9,6 +9,7 @@ from ray.rllib.optimizers.sample_batch import SampleBatch, pack
 
 import tensorflow as tf
 import models
+import baselines.common.tf_util as U
 from baselines.common.schedules import LinearSchedule
 from simple import ActWrapper
 from build_graph import build_train
@@ -66,6 +67,10 @@ class DQNEvaluator(Evaluator):
             schedule_timesteps=int(self.config["exploration_fraction"] * self.config["schedule_max_timesteps"]),
             initial_p=1.0,
             final_p=self.config["exploration_final_eps"])
+
+        # Initialize the parameters and copy them to the target network.
+        U.initialize()
+        update_target()
 
     def sample(self):
         obs, actions, rewards, new_obs, dones = [], [], [], [], []
