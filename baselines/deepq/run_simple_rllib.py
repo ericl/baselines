@@ -15,7 +15,7 @@ ray.init(num_gpus=1)
 run_experiments({
     "baseline-rllib-pong": {
         "run": "DQNBaseline",
-        "env": "PongNoFrameskip-v4",
+        "env": "BreakoutNoFrameskip-v4",
         "resources": {
             "cpu": 1,
             "gpu": 1,
@@ -33,6 +33,9 @@ run_experiments({
             "buffer_size": 10000,
             "target_network_update_freq": 1000,
             "timesteps_per_iteration": 1000,
+            "exploration_fraction": 0.1,
+            "exploration_final_eps": 0.01,
+            "schedule_max_timesteps": int(10e6),
         },
     },
 })
