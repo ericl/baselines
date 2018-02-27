@@ -15,13 +15,13 @@ class DQNEvaluator(Evaluator):
     
     def __init__(self, config, env_creator):
         self.config = config
-        self.obs = self.env.reset()
         self.local_timestep = 0
         self.episode_rewards = [0.0]
         self.episode_lengths = [0.0]
 
         self.env = env_creator(self.config["env_config"])
         self.env = wrap_deepmind(self.env, frame_stack=True, scale=True)
+        self.obs = self.env.reset()
 
         self.sess = tf.Session()
         self.sess.__enter__()
