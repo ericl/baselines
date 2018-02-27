@@ -442,25 +442,8 @@ def build_train(make_obs_ph, q_func, num_actions, optimizer, grad_norm_clipping=
             outputs=td_error,
             updates=[optimize_expr]
         )
-        compute_grads = U.function(
-            inputs=[
-                obs_t_input,
-                act_t_ph,
-                rew_t_ph,
-                obs_tp1_input,
-                done_mask_ph,
-                importance_weights_ph
-            ],
-            outputs=gradients,
-        )
-        apply_grads = U.function(
-            inputs=[
-                gradients,
-            ],
-            updates=[optimize_expr],
-        )
         update_target = U.function([], [], updates=[update_target_expr])
 
         q_values = U.function([obs_t_input], q_t)
 
-        return act_f, train, compute_grads, apply_grads, update_target, {'q_values': q_values}
+        return act_f, train, update_target, {'q_values': q_values}

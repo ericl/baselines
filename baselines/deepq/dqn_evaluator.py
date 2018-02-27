@@ -42,7 +42,7 @@ class DQNEvaluator(Evaluator):
         )
         self.model = q_func
 
-        act, train, self.compute_grads, self.apply_grads, self.update_target, debug = build_train(
+        act, train, self.update_target, debug = build_train(
             make_obs_ph=make_obs_ph,
             q_func=q_func,
             num_actions=self.env.action_space.n,
@@ -112,15 +112,15 @@ class DQNEvaluator(Evaluator):
         return batch
 
     def compute_gradients(self, samples):
-        return self.compute_grads(
-            samples["obs"], samples["actions"], samples["rewards"],
-            samples["new_obs"], samples["dones"], samples["weights"])
+        raise NotImplementedError
 
     def apply_gradients(self, grads):
-        self.apply_grads(grads)
+        raise NotImplementedError
 
     def compute_apply(self, samples):
-        raise NotImplementedError
+        return self.train(
+            samples["obs"], samples["actions"], samples["rewards"],
+            samples["new_obs"], samples["dones"], samples["weights"])
 
     def get_weights(self):
         raise NotImplementedError
