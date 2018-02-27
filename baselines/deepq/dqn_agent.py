@@ -41,7 +41,6 @@ DEFAULT_CONFIG = dict(
     learning_starts=1000,
     # Update the target network every `target_network_update_freq` steps.
     target_network_update_freq=500,
-    exploration_fraction=
 
     # === Replay buffer ===
     # Size of the replay buffer. Note that if async_updates is set, then each
