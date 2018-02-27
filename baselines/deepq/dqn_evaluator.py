@@ -11,6 +11,7 @@ import tensorflow as tf
 import models
 from simple import ActWrapper
 from build_graph import build_train
+from utils import BatchInput
 
 
 class DQNEvaluator(Evaluator):
