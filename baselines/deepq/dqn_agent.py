@@ -26,12 +26,22 @@ DEFAULT_CONFIG = dict(
     env_config={},
 
     # === Exploration ===
+    # Max num timesteps for annealing schedules. Exploration is annealed from
+    # 1.0 to exploration_fraction over this number of timesteps scaled by
+    # exploration_fraction
+    schedule_max_timesteps=100000,
+    # Fraction of entire training period over which the exploration rate is
+    # annealed
+    exploration_fraction=0.1,
+    # Final value of random action probability
+    exploration_final_eps=0.02,
     # Number of env steps to optimize for before returning
     timesteps_per_iteration=1000,
     # How many steps of the model to sample before learning starts.
     learning_starts=1000,
     # Update the target network every `target_network_update_freq` steps.
     target_network_update_freq=500,
+    exploration_fraction=
 
     # === Replay buffer ===
     # Size of the replay buffer. Note that if async_updates is set, then each
