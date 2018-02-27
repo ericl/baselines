@@ -24,8 +24,12 @@ class DQNEvaluator(Evaluator):
         self.episode_rewards = [0.0]
         self.episode_lengths = [0.0]
 
-        self.env = env_creator(self.config["env_config"])
-        self.env = wrap_deepmind(self.env, frame_stack=True, scale=True)
+        if "cartpole" in self.config["env_config"]:
+            self.env = env_creator(self.config["env_config"])
+        else:
+            self.env = wrap_deepmind(
+                env_creator(self.config["env_config"]),
+                frame_stack=True, scale=True)
         self.obs = self.env.reset()
 
         self.sess = tf.Session()
@@ -37,12 +41,14 @@ class DQNEvaluator(Evaluator):
         def make_obs_ph(name):
             return BatchInput(observation_space_shape, name=name)
 
-        q_func = models.cnn_to_mlp(
-            convs=[(32, 8, 4), (64, 4, 2), (64, 3, 1)],
-            hiddens=[256],
-            dueling=True,
-        )
-        self.model = q_func
+        if "cartpole" in self.config["env_config"]:
+            q_func = deepq.models.mlp([64])
+        else:
+            q_func = models.cnn_to_mlp(
+                convs=[(32, 8, 4), (64, 4, 2), (64, 3, 1)],
+                hiddens=[256],
+                dueling=True,
+            )
 
         act, self.train, self.update_target, debug = build_train(
             make_obs_ph=make_obs_ph,

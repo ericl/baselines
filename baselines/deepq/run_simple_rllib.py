@@ -29,7 +29,7 @@ run_experiments({
             "sample_batch_size": 4,
             "train_batch_size": 32,
             "force_remote_evaluators": False,
-            "learning_starts": 1000,
+            "learning_starts": 10000,
             "buffer_size": 10000,
             "target_network_update_freq": 1000,
             "timesteps_per_iteration": 1000,
