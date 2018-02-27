@@ -55,7 +55,7 @@ class DQNEvaluator(Evaluator):
         act_params = {
             'make_obs_ph': make_obs_ph,
             'q_func': q_func,
-            'num_actions': env.action_space.n,
+            'num_actions': self.env.action_space.n,
         }
 
         self.act = ActWrapper(act, act_params)
