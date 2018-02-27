@@ -10,6 +10,7 @@ from ray.rllib.optimizers.sample_batch import SampleBatch, pack
 import tensorflow as tf
 import models
 from simple import ActWrapper
+from build_graph import build_train
 
 
 class DQNEvaluator(Evaluator):
@@ -40,7 +41,7 @@ class DQNEvaluator(Evaluator):
         )
         self.model = q_func
 
-        act, train, self.compute_grads, self.apply_grads, self.update_target, debug = deepq.build_train(
+        act, train, self.compute_grads, self.apply_grads, self.update_target, debug = build_train(
             make_obs_ph=make_obs_ph,
             q_func=q_func,
             num_actions=self.env.action_space.n,
