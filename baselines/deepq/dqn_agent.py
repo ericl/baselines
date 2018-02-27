@@ -6,7 +6,6 @@ import pickle
 import os
 
 import numpy as np
-from torch.autograd import Variable
 
 import ray
 from ray.rllib.agent import Agent
