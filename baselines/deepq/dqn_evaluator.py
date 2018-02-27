@@ -70,7 +70,7 @@ class DQNEvaluator(Evaluator):
 
         # Initialize the parameters and copy them to the target network.
         U.initialize()
-        update_target()
+        self.update_target()
 
     def sample(self):
         obs, actions, rewards, new_obs, dones = [], [], [], [], []
