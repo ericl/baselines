@@ -32,7 +32,7 @@ class DQNEvaluator(Evaluator):
                 frame_stack=True, scale=True)
         self.obs = self.env.reset()
 
-        self.sess = tf.Session()
+        self.sess = U.make_session()
         self.sess.__enter__()
 
         # capture the shape outside the closure so that the env object is not serialized
