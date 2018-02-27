@@ -7,6 +7,7 @@ from ray.rllib.dqn.common.atari_wrappers import wrap_deepmind
 from ray.rllib.optimizers.evaluator import Evaluator
 from ray.rllib.optimizers.sample_batch import SampleBatch, pack
 
+import tensorflow as tf
 import models
 from simple import ActWrapper
 
