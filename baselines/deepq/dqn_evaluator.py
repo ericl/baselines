@@ -44,7 +44,7 @@ class DQNEvaluator(Evaluator):
         )
         self.model = q_func
 
-        act, train, self.update_target, debug = build_train(
+        act, self.train, self.update_target, debug = build_train(
             make_obs_ph=make_obs_ph,
             q_func=q_func,
             num_actions=self.env.action_space.n,
