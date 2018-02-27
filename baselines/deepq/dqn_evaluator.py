@@ -79,13 +79,13 @@ class DQNEvaluator(Evaluator):
             update_eps = self.exploration.value(self.local_timestep)
             action = self.act(
                 np.array(self.obs)[None], update_eps=update_eps)[0]
-            new_obs, reward, done, _ = self.env.step(action)
+            obs_tp1, reward, done, _ = self.env.step(action)
             obs.append(self.obs)
             actions.append(action)
             rewards.append(reward)
-            new_obs.append(new_obs)
+            new_obs.append(obs_tp1)
             dones.append(1.0 if done else 0.0)
-            self.obs = new_obs
+            self.obs = obs_tp1
             self.episode_rewards[-1] += reward
             self.episode_lengths[-1] += 1
             if done:
