@@ -42,7 +42,7 @@ class DQNEvaluator(Evaluator):
             return BatchInput(observation_space_shape, name=name)
 
         if "cartpole" in self.config["env_config"]:
-            q_func = deepq.models.mlp([64])
+            q_func = models.mlp([64])
         else:
             q_func = models.cnn_to_mlp(
                 convs=[(32, 8, 4), (64, 4, 2), (64, 3, 1)],
