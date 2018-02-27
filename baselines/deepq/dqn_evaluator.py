@@ -143,6 +143,3 @@ class DQNEvaluator(Evaluator):
             "num_episodes": len(self.episode_rewards),
             "local_timestep": self.local_timestep,
         }
-
-    def update_target(self):
-        self.update_target()
