@@ -243,7 +243,7 @@ def learn(env,
             reset = False
             new_obs, rew, done, _ = env.step(env_action)
             # Store transition in the replay buffer.
-            replay_buffer.add(obs, action, rew, new_obs, float(done))
+            replay_buffer.add(obs, action, np.sign(rew), new_obs, float(done))
             obs = new_obs
 
             episode_rewards[-1] += rew

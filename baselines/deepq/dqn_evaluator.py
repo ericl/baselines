@@ -88,7 +88,7 @@ class DQNEvaluator(Evaluator):
             obs_tp1, reward, done, _ = self.env.step(action)
             obs.append(self.obs)
             actions.append(action)
-            rewards.append(reward)
+            rewards.append(np.sign(reward))
             new_obs.append(obs_tp1)
             dones.append(1.0 if done else 0.0)
             self.obs = obs_tp1
