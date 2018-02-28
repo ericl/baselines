@@ -29,7 +29,7 @@ class DQNEvaluator(Evaluator):
         else:
             self.env = wrap_deepmind(
                 env_creator(self.config["env_config"]),
-                frame_stack=True, scale=True)
+                clip_rewards=False, frame_stack=True, scale=True)
         self.obs = self.env.reset()
 
         self.sess = U.make_session()
