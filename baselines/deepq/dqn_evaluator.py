@@ -1,0 +1,154 @@
+import os
+
+import numpy as np
+
+from ray.rllib.dqn.dqn_evaluator import adjust_nstep
+from ray.rllib.optimizers.policy_evaluator import PolicyEvaluator
+from ray.rllib.optimizers.sample_batch import SampleBatch
+from ray.rllib.utils.atari_wrappers import wrap_deepmind
+from ray.rllib.utils.compression import pack
+
+import tensorflow as tf
+import models
+import baselines.common.tf_util as U
+from baselines.common.schedules import LinearSchedule
+from simple import ActWrapper
+from build_graph import build_train
+from utils import BatchInput
+
+
+class BaselinesDQNEvaluator(PolicyEvaluator):
+    """Integration point with RLlib policy optimizers.
+
+    This wraps the existing DQN graph to implement the right interface."""
+
+    def __init__(self, config, env_creator):
+        self.config = config
+        self.local_timestep = 0
+        self.episode_rewards = [0.0]
+        self.episode_lengths = [0.0]
+
+        self.env = env_creator(self.config["env_config"])
+        if hasattr(self.env.unwrapped, "ale"):
+            self.env = wrap_deepmind(self.env, dim=84)
+        self.obs = self.env.reset()
+
+        self.sess = U.make_session()
+        self.sess.__enter__()
+
+        # capture the shape outside the closure so that the env object is not serialized
+        # by cloudpickle when serializing make_obs_ph
+        observation_space_shape = self.env.observation_space.shape
+        def make_obs_ph(name):
+            return BatchInput(observation_space_shape, name=name)
+
+        if hasattr(self.env.unwrapped, "ale"):
+            q_func = models.cnn_to_mlp(
+                convs=[(32, 8, 4), (64, 4, 2), (64, 3, 1)],
+                hiddens=[256],
+                dueling=True,
+            )
+        else:
+            q_func = models.mlp([64])
+
+        act, self.train, self.update_target, debug = build_train(
+            make_obs_ph=make_obs_ph,
+            q_func=q_func,
+            num_actions=self.env.action_space.n,
+            optimizer=tf.train.AdamOptimizer(learning_rate=self.config["lr"]),
+            gamma=self.config["gamma"],
+            grad_norm_clipping=10,
+            param_noise=False
+        )
+
+        act_params = {
+            'make_obs_ph': make_obs_ph,
+            'q_func': q_func,
+            'num_actions': self.env.action_space.n,
+        }
+
+        self.act = ActWrapper(act, act_params)
+
+        # Create the schedule for exploration starting from 1.
+        self.exploration = LinearSchedule(
+            schedule_timesteps=int(self.config["exploration_fraction"] * self.config["schedule_max_timesteps"]),
+            initial_p=1.0,
+            final_p=self.config["exploration_final_eps"])
+
+        # Initialize the parameters and copy them to the target network.
+        U.initialize()
+        self.update_target()
+
+    def sample(self):
+        obs, actions, rewards, new_obs, dones = [], [], [], [], []
+        for _ in range(
+                self.config["sample_batch_size"] + self.config["n_step"] - 1):
+            update_eps = self.exploration.value(self.local_timestep)
+            action = self.act(
+                np.array(self.obs)[None], update_eps=update_eps)[0]
+            obs_tp1, reward, done, _ = self.env.step(action)
+            obs.append(self.obs)
+            actions.append(action)
+            rewards.append(np.sign(reward))
+            new_obs.append(obs_tp1)
+            dones.append(1.0 if done else 0.0)
+            self.obs = obs_tp1
+            self.episode_rewards[-1] += reward
+            self.episode_lengths[-1] += 1
+            if done:
+                self.obs = self.env.reset()
+                self.episode_rewards.append(0.0)
+                self.episode_lengths.append(0.0)
+            self.local_timestep += 1
+
+        # N-step Q adjustments
+        if self.config["n_step"] > 1:
+            # Adjust for steps lost from truncation
+            self.local_timestep -= (self.config["n_step"] - 1)
+            adjust_nstep(
+                self.config["n_step"], self.config["gamma"],
+                obs, actions, rewards, new_obs, dones)
+
+        batch = SampleBatch({
+            "obs": obs, "actions": actions, "rewards": rewards,
+            "new_obs": new_obs, "dones": dones,
+            "weights": np.ones_like(rewards)})
+        assert batch.count == self.config["sample_batch_size"]
+
+        batch.data["obs"] = [pack(o) for o in batch["obs"]]
+        batch.data["new_obs"] = [pack(o) for o in batch["new_obs"]]
+        if self.config["apex"]:
+            td_errors = self.agent.compute_td_error(batch)
+            new_priorities = (
+                np.abs(td_errors) + self.config["prioritized_replay_eps"])
+            batch.data["weights"] = new_priorities
+
+        return batch
+
+    def compute_gradients(self, samples):
+        raise NotImplementedError
+
+    def apply_gradients(self, grads):
+        raise NotImplementedError
+
+    def compute_apply(self, samples):
+        td_error = self.train(
+            samples["obs"], samples["actions"], samples["rewards"],
+            samples["new_obs"], samples["dones"], samples["weights"])
+        return {"td_error": td_error}
+
+    def get_weights(self):
+        raise NotImplementedError
+
+    def set_weights(self, weights):
+        raise NotImplementedError
+
+    def stats(self):
+        mean_100ep_reward = round(np.mean(self.episode_rewards[-101:-1]), 5)
+        mean_100ep_length = round(np.mean(self.episode_lengths[-101:-1]), 5)
+        return {
+            "mean_100ep_reward": mean_100ep_reward,
+            "mean_100ep_length": mean_100ep_length,
+            "num_episodes": len(self.episode_rewards),
+            "local_timestep": self.local_timestep,
+        }
